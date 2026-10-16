@@ -2,10 +2,11 @@
 // Bedtime Adventure: a picture checklist for getting ready for bed.
 //
 // Kid:       big front button (A) = "I did it!" -> celebration, next step.
-// Grown-up:  side button (B)
-//              tap          = go back one step (oops)
-//              hold ~1s     = skip this step (e.g. not a bath night)
-//              hold ~3s     = start the routine over
+// Grown-up:  tap B, then press and hold B, press A to pick, let go of B
+//              A once       = go back one step (oops)
+//              A twice      = skip this step (e.g. not a bath night)
+//              A 3 times    = start the routine over
+//              A 4 times    = cancel (presses keep cycling: 5 = back, ...)
 //
 // Finishing every step earns a star on the weekly chart; 7 stars earns
 // "Super Sleeper". Then the screen fades to a sleepy moon and sleeps.
