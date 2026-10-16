@@ -280,7 +280,7 @@ void BedtimeMode::drawStep(M5Canvas& g, uint32_t now) {
   if (small) {
     g.setFont(&fonts::Font2);
     g.setTextDatum(middle_center);
-    g.setTextColor((uint32_t)0xA9B4D9);
+    g.setTextColor(col::SOFT);
     g.drawString(small, 179, 100);
   }
 

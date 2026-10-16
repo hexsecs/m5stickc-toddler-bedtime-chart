@@ -11,12 +11,15 @@
 #include <esp_sleep.h>
 #endif
 
+#include "Battery.h"
 #include "Config.h"
+#include "Draw.h"
 #include "Mode.h"
 #include "Sound.h"
 #include "modes/BedtimeMode.h"
 
 Sound sound;
+Battery battery;
 
 namespace {
 
@@ -104,6 +107,7 @@ void loop() {
   uint32_t frameStart = millis();
   M5.update();
   sound.update();
+  battery.update(frameStart);
 
   if (M5.BtnA.isPressed() || M5.BtnB.isPressed() || M5.BtnPWR.isPressed()) lastActivity = frameStart;
 
@@ -114,6 +118,9 @@ void loop() {
   }
 
   mode().update(canvas, frameStart);
+  if (mode().showsBattery() && battery.known()) {
+    drawBattery(canvas, canvas.width() - 6, 10, battery.percent(), battery.charging(), kLowBatteryPercent);
+  }
   canvas.pushSprite(0, 0);
 
   if (mode().wantsSleep() ||

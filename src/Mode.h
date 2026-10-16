@@ -20,4 +20,6 @@ class Mode {
   virtual bool wantsSleep() const { return false; }
   // Return false while the mode must stay awake regardless of button activity.
   virtual bool allowIdleSleep() const { return true; }
+  // Return true when the frame just drawn has room for the battery indicator.
+  virtual bool showsBattery() const { return false; }
 };

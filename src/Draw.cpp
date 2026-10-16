@@ -1,6 +1,7 @@
 #include "Draw.h"
 
 #include <math.h>
+#include <stdio.h>
 
 namespace {
 constexpr uint32_t kBrown = 0xC68642;
@@ -64,6 +65,32 @@ void drawCheck(M5Canvas& g, int cx, int cy, int s, uint32_t color) {
 
 void drawSmile(M5Canvas& g, int cx, int cy, int r, uint32_t color) {
   g.fillArc(cx, cy, r, r - 2, 25, 155, color);
+}
+
+void drawBattery(M5Canvas& g, int right, int cy, int percent, bool charging, int lowPercent) {
+  uint32_t color = percent < lowPercent ? kRed : col::SOFT;
+  char text[5];
+  snprintf(text, sizeof(text), "%d%%", percent);
+  g.setFont(&fonts::Font2);
+  g.setTextDatum(middle_right);
+  g.setTextColor(color);
+  g.drawString(text, right, cy + 1);
+
+  // Body 18x10 with a little nib on the right, filled to the level.
+  int nibX = right - g.textWidth(text) - 5, bx = nibX - 18, by = cy - 5;
+  g.drawRect(bx, by, 18, 10, color);
+  g.fillRect(nibX, cy - 2, 2, 4, color);
+  int fill = (14 * percent + 50) / 100;
+  if (fill > 0) g.fillRect(bx + 2, by + 2, fill, 6, color);
+
+  if (charging) {  // lightning bolt inside the body, outlined in navy so it shows on the fill
+    int x = bx + 9;
+    for (int dx : {-1, 1, 0}) {
+      uint32_t c = dx ? col::NAVY : col::YELLOW;
+      g.fillTriangle(x + dx + 2, cy - 4, x + dx - 3, cy, x + dx + 1, cy, c);
+      g.fillTriangle(x + dx - 1, cy - 1, x + dx + 3, cy - 1, x + dx - 2, cy + 3, c);
+    }
+  }
 }
 
 void iconToys(M5Canvas& g, int cx, int cy) {

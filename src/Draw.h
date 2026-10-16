@@ -15,6 +15,7 @@ constexpr uint32_t WHITE = 0xFFFFFF;
 constexpr uint32_t INK = 0x1B1B2F;
 constexpr uint32_t YELLOW = 0xFFD43B;
 constexpr uint32_t DIM = 0x45507A;
+constexpr uint32_t SOFT = 0xA9B4D9;  // quiet grown-up text
 constexpr uint32_t GREEN = 0x22C55E;
 }  // namespace col
 
@@ -22,6 +23,10 @@ void fillStar(M5Canvas& g, int cx, int cy, int r, uint32_t color);
 void drawStarOutline(M5Canvas& g, int cx, int cy, int r, uint32_t color);
 void drawCheck(M5Canvas& g, int cx, int cy, int size, uint32_t color);
 void drawSmile(M5Canvas& g, int cx, int cy, int r, uint32_t color);
+
+// Small battery icon + "73%" for grown-ups, right-aligned to `right` and
+// vertically centred on `cy`. Red when below `lowPercent`; a bolt while charging.
+void drawBattery(M5Canvas& g, int right, int cy, int percent, bool charging, int lowPercent);
 
 using IconFn = void (*)(M5Canvas& g, int cx, int cy);
 
