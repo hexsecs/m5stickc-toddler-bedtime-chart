@@ -66,6 +66,9 @@ Other behavior:
   starts fresh.
 - The weekly star count is stored in flash, so it survives turning the
   device off. It counts *finished nights*, not calendar days.
+- A small, dim battery level shows in the top-right corner of each step
+  screen. It turns red below 20% and shows a lightning bolt while charging
+  (StickC Plus only; the Plus2 can't tell when it's charging).
 
 ## Building and flashing
 
@@ -98,8 +101,8 @@ pio test -e native
 
 ## Tweaking
 
-- `src/Config.h` sets brightness, volume, the idle-sleep time and screen
-  rotation. If the picture is upside down, change `kScreenRotation` from
+- `src/Config.h` sets brightness, volume, the idle-sleep time, the
+  low-battery warning level and screen rotation. If the picture is upside down, change `kScreenRotation` from
   3 to 1.
 - The steps are listed in `kSteps` at the top of
   `src/modes/BedtimeMode.cpp`. Add, remove or reorder them there (up to
@@ -121,9 +124,11 @@ switches between them.
 
 ```
 lib/Checklist/   hardware-free checklist + star-chart logic (unit tested)
+lib/BatteryGauge/ smooths noisy battery readings (unit tested)
 src/main.cpp     loop, frame buffer, mode switching, deep sleep
 src/Platform.h   shims so the code also builds for the SDL simulator
 src/Sound.h      non-blocking buzzer melody player
+src/Battery.h    reads the battery every few seconds for the indicator
 src/Draw.*       star/tick helpers and all the picture icons
 src/modes/       one file pair per toddler mode
 test/            host unit tests

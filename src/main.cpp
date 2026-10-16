@@ -11,12 +11,14 @@
 #include <esp_sleep.h>
 #endif
 
+#include "Battery.h"
 #include "Config.h"
 #include "Mode.h"
 #include "Sound.h"
 #include "modes/BedtimeMode.h"
 
 Sound sound;
+Battery battery;
 
 namespace {
 
@@ -104,6 +106,7 @@ void loop() {
   uint32_t frameStart = millis();
   M5.update();
   sound.update();
+  battery.update(frameStart);
 
   if (M5.BtnA.isPressed() || M5.BtnB.isPressed() || M5.BtnPWR.isPressed()) lastActivity = frameStart;
 

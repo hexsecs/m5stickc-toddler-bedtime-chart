@@ -8,3 +8,4 @@ constexpr uint8_t kBrightness = 110;        // 0-255; kept low-ish for bedtime e
 constexpr uint8_t kVolume = 140;            // 0-255 buzzer volume
 constexpr uint8_t kLullabyVolume = 70;      // quieter for the final goodnight tune
 constexpr uint32_t kIdleSleepMs = 3 * 60 * 1000;  // sleep after 3 min without a press
+constexpr uint8_t kLowBatteryPercent = 20;   // battery indicator turns red below this
