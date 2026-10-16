@@ -50,13 +50,26 @@ added to the **weekly star chart**. The 7th star unlocks a
 **SUPER SLEEPER!** celebration. Then a sleepy moon plays a soft lullaby,
 the screen fades out, and the device goes to sleep.
 
-**For grown-ups (side button B):**
+**For grown-ups:** a two-handed "secret handshake" on the **side button
+(B)**: tap B once, then within about half a second press B again and keep
+holding it. While holding, press the big button **A** to pick an action, then
+let go of B. Each A press ticks, and a small hint shows what letting go will
+do.
 
-| Side button | Does |
+| Tap B, hold B, press A | Does |
 |---|---|
-| tap | go back one step (oops, pressed too early) |
-| hold ~1 s | skip this step, e.g. no bath tonight |
-| hold ~3 s | start the whole routine over |
+| once | go back one step (oops, pressed too early) |
+| twice | skip this step, e.g. no bath tonight |
+| three times | start the whole routine over |
+| four times | cancel: nothing happens |
+
+Pressing more keeps cycling (5 = back, 6 = skip, ...), so if you overshoot,
+keep pressing until the hint shows what you want.
+
+Without the tap first, holding B does nothing and A presses complete steps
+as usual. Squeezing both buttons at the same moment also counts as a normal
+A press. So a button-mashing (or clever) toddler can't stumble onto undo or
+skip.
 
 Other behavior:
 - After 3 minutes without a press, the device goes to deep sleep. Press A

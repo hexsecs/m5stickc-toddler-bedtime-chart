@@ -21,7 +21,7 @@ const Step kSteps[] = {
     {"TOYS", "AWAY", iconToys, 0x4DA3FF, nullptr},
     {"BRUSH", "TEETH", iconTeeth, 0x2EC4B6, nullptr},
     {"POTTY", "TIME", iconPotty, 0x8BD346, nullptr},
-    {"BATH", "TIME", iconBath, 0xB38CFF, "hold side = skip"},
+    {"BATH", "TIME", iconBath, 0xB38CFF, nullptr},
     {"PAJAMA", "POWER!", iconPajamas, 0x6FA8FF, nullptr},
     {"SIP OF", "WATER", iconWater, 0x3DD6D0, nullptr},
     {"READ 2", "BOOKS", iconBooks, 0xC4A1FF, nullptr},
@@ -37,8 +37,9 @@ constexpr uint32_t kAllDoneMs = 9000;
 constexpr uint32_t kAllDoneMinMs = 3000;  // before a press can move things on
 constexpr uint32_t kSuperMs = 7000;
 constexpr uint32_t kGoodnightMs = 25000;
-constexpr uint32_t kTapMaxMs = 700;      // B shorter than this = back
-constexpr uint32_t kRestartHoldMs = 3000;  // B longer than this = start over
+constexpr uint32_t kTapMaxMs = 300;     // a B press shorter than this is a tap
+constexpr uint32_t kArmWindowMs = 600;  // tap B, then press B again within this to arm it
+constexpr uint32_t kComboMinMs = 300;   // armed B must be held this long before A presses count
 constexpr uint32_t kResumeWindowS = 3 * 3600;  // forget a half-done routine after 3h
 
 MELODY(kStepDone, {N_C5, 90}, {N_E5, 90}, {N_G5, 90}, {N_C6, 240});
@@ -52,6 +53,7 @@ MELODY(kLullaby, {N_E5, 300}, {N_E5, 300}, {N_G5, 800}, {N_E5, 300}, {N_E5, 300}
 MELODY(kBack, {N_E5, 80}, {N_C5, 140});
 MELODY(kSkip, {N_C5, 70}, {N_C5, 70});
 MELODY(kRestart, {N_G5, 90}, {N_E5, 90}, {N_C5, 200});
+MELODY(kTick, {N_C6, 25});
 
 constexpr uint32_t kBurstColors[] = {0xFFD43B, 0xFF6B9A, 0x4DA3FF, 0x8BD346, 0xFF9F1C, 0xC4A1FF};
 
@@ -108,6 +110,7 @@ void BedtimeMode::enter() {
   rtcHasSnapshot = false;
   waitForARelease_ = true;
   bDownAt_ = 0;
+  lastBTapAt_ = 0;
   setState(State::Step, millis());
 }
 
@@ -131,37 +134,71 @@ void BedtimeMode::finishRoutine(uint32_t now) {
   setState(State::AllDone, now);
 }
 
-void BedtimeMode::handleGrownUpButton(uint32_t now) {
-  if (M5.BtnB.wasPressed()) {
-    bDownAt_ = now;
-    bRestartFired_ = false;
-  }
-  if (!bDownAt_) return;
+namespace {
+// A presses while B is held cycle through the actions, so overshooting just
+// means pressing on until it comes round again: 1 back, 2 skip, 3 start over,
+// 4 cancel, 5 back, ...
+enum class GrownUpAction : uint8_t { Cancel, Back, Skip, StartOver };
+GrownUpAction grownUpAction(uint8_t aCount) { return (GrownUpAction)(aCount % 4); }
+}  // namespace
 
-  if (M5.BtnB.isPressed() && !bRestartFired_ && now - bDownAt_ >= kRestartHoldMs) {
-    list_.reset();
-    sound.play(kRestart, MELODY_LEN(kRestart));
-    flashText_ = "start over";
-    flashUntil_ = now + 1200;
-    bRestartFired_ = true;
+bool BedtimeMode::handleGrownUpButton(uint32_t now, bool aPressed) {
+  // Grown-up actions are a secret handshake: tap B, then press and hold B,
+  // press A to pick an action, let go of B. Without the tap first, holding B
+  // does nothing and A presses complete steps as usual, and squeezing both
+  // buttons at once counts as a normal A press, so a curious toddler can't
+  // stumble onto undo or skip.
+  if (M5.BtnB.wasPressed()) {
+    bArmed_ = lastBTapAt_ && now - lastBTapAt_ <= kArmWindowMs;
+    lastBTapAt_ = 0;
+    bDownAt_ = now;
+    aCount_ = 0;
+  } else if (!bDownAt_ && M5.BtnB.isPressed()) {
+    // A press that started while another screen was showing: never armed.
+    bArmed_ = false;
+    bDownAt_ = now;
+    aCount_ = 0;
+  }
+  if (!bDownAt_) return false;
+
+  bool used = false;
+  if (aPressed && bArmed_ && M5.BtnB.isPressed() && now - bDownAt_ >= kComboMinMs) {
+    ++aCount_;
+    sound.play(kTick, MELODY_LEN(kTick));
+    used = true;
   }
 
   if (M5.BtnB.wasReleased()) {
-    uint32_t held = now - bDownAt_;
+    if (!bArmed_ && now - bDownAt_ < kTapMaxMs) lastBTapAt_ = now;
     bDownAt_ = 0;
-    if (bRestartFired_) return;
-    if (held < kTapMaxMs) {
-      list_.back();
-      sound.play(kBack, MELODY_LEN(kBack));
-      flashText_ = "back";
-    } else {
-      list_.skip();
-      sound.play(kSkip, MELODY_LEN(kSkip));
-      flashText_ = "skipped";
-      if (list_.finished()) finishRoutine(now);
+    if (!bArmed_) return used;
+    bArmed_ = false;
+    switch (grownUpAction(aCount_)) {
+      case GrownUpAction::Cancel:
+        break;
+      case GrownUpAction::Back:
+        list_.back();
+        sound.play(kBack, MELODY_LEN(kBack));
+        flashText_ = "back";
+        flashUntil_ = now + 1000;
+        break;
+      case GrownUpAction::Skip:
+        list_.skip();
+        sound.play(kSkip, MELODY_LEN(kSkip));
+        flashText_ = "skipped";
+        flashUntil_ = now + 1000;
+        if (list_.finished()) finishRoutine(now);
+        break;
+      case GrownUpAction::StartOver:
+        list_.reset();
+        sound.play(kRestart, MELODY_LEN(kRestart));
+        flashText_ = "start over";
+        flashUntil_ = now + 1000;
+        break;
     }
-    flashUntil_ = now + 900;
+    aCount_ = 0;
   }
+  return used;
 }
 
 void BedtimeMode::update(M5Canvas& g, uint32_t now) {
@@ -171,7 +208,8 @@ void BedtimeMode::update(M5Canvas& g, uint32_t now) {
 
   switch (state_) {
     case State::Step:
-      if (aPressed && !list_.finished()) {
+      if (handleGrownUpButton(now, aPressed)) aPressed = false;
+      if (state_ == State::Step && aPressed && !list_.finished()) {
         cheerStep_ = list_.current();
         list_.complete();
         sound.play(kStepDone, MELODY_LEN(kStepDone));
@@ -179,7 +217,6 @@ void BedtimeMode::update(M5Canvas& g, uint32_t now) {
         drawCheer(g, now);
         return;
       }
-      handleGrownUpButton(now);
       if (state_ == State::Step) drawStep(g, now);
       else drawAllDone(g, now);
       return;
@@ -273,9 +310,10 @@ void BedtimeMode::drawStep(M5Canvas& g, uint32_t now) {
   drawTitle(g, s.line1, s.line2, s.accent);
 
   const char* small = s.hint;
-  if (M5.BtnB.isPressed() && bDownAt_ && !bRestartFired_) {
-    uint32_t held = now - bDownAt_;
-    if (held >= kTapMaxMs) small = held < kRestartHoldMs - 800 ? "let go = skip" : "keep holding...";
+  if (bArmed_ && M5.BtnB.isPressed() && bDownAt_ && now - bDownAt_ >= kComboMinMs) {
+    static const char* const kPending[] = {"let go = cancel", "let go = back", "let go = skip",
+                                           "let go = restart"};
+    small = aCount_ ? kPending[(int)grownUpAction(aCount_)] : "tap big button";
   }
   if (small) {
     g.setFont(&fonts::Font2);

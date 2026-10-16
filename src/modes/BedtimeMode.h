@@ -29,7 +29,8 @@ class BedtimeMode : public Mode {
   enum class State { Step, Cheer, AllDone, SuperSleeper, Goodnight, Asleep };
 
   void setState(State s, uint32_t now);
-  void handleGrownUpButton(uint32_t now);
+  // Returns true if it used this frame's A press (B held + A = back).
+  bool handleGrownUpButton(uint32_t now, bool aPressed);
   void finishRoutine(uint32_t now);
 
   void drawStep(M5Canvas& g, uint32_t now);
@@ -50,7 +51,9 @@ class BedtimeMode : public Mode {
 
   bool waitForARelease_ = true;  // ignore the press that woke us up
   uint32_t bDownAt_ = 0;
-  bool bRestartFired_ = false;
+  uint8_t aCount_ = 0;  // A presses while B is held; see grownUpAction()
+  bool bArmed_ = false;     // this B hold followed a quick B tap, so A presses count
+  uint32_t lastBTapAt_ = 0;  // when a quick B tap was let go, to arm the next press
   uint32_t flashUntil_ = 0;  // brief visual feedback for grown-up actions
   const char* flashText_ = nullptr;
 };
