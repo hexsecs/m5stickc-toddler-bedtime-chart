@@ -39,7 +39,7 @@ constexpr uint32_t kSuperMs = 7000;
 constexpr uint32_t kGoodnightMs = 25000;
 constexpr uint32_t kTapMaxMs = 300;     // a B press shorter than this is a tap
 constexpr uint32_t kArmWindowMs = 600;  // tap B, then press B again within this to arm it
-constexpr uint32_t kComboMinMs = 300;   // armed B must be held this long before A presses count
+constexpr uint32_t kSqueezeMs = 100;    // A this soon after armed B = squeezing both, a normal A press
 constexpr uint32_t kResumeWindowS = 3 * 3600;  // forget a half-done routine after 3h
 
 MELODY(kStepDone, {N_C5, 90}, {N_E5, 90}, {N_G5, 90}, {N_C6, 240});
@@ -162,7 +162,7 @@ bool BedtimeMode::handleGrownUpButton(uint32_t now, bool aPressed) {
   if (!bDownAt_) return false;
 
   bool used = false;
-  if (aPressed && bArmed_ && M5.BtnB.isPressed() && now - bDownAt_ >= kComboMinMs) {
+  if (aPressed && bArmed_ && M5.BtnB.isPressed() && now - bDownAt_ >= kSqueezeMs) {
     ++aCount_;
     sound.play(kTick, MELODY_LEN(kTick));
     used = true;
@@ -310,7 +310,7 @@ void BedtimeMode::drawStep(M5Canvas& g, uint32_t now) {
   drawTitle(g, s.line1, s.line2, s.accent);
 
   const char* small = s.hint;
-  if (bArmed_ && M5.BtnB.isPressed() && bDownAt_ && now - bDownAt_ >= kComboMinMs) {
+  if (bArmed_ && M5.BtnB.isPressed() && bDownAt_ && now - bDownAt_ >= kSqueezeMs) {
     static const char* const kPending[] = {"let go = cancel", "let go = back", "let go = skip",
                                            "let go = restart"};
     small = aCount_ ? kPending[(int)grownUpAction(aCount_)] : "tap big button";
