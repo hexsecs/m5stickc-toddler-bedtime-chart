@@ -13,6 +13,7 @@
 
 #include "Battery.h"
 #include "Config.h"
+#include "Draw.h"
 #include "Mode.h"
 #include "Sound.h"
 #include "modes/BedtimeMode.h"
@@ -117,6 +118,9 @@ void loop() {
   }
 
   mode().update(canvas, frameStart);
+  if (mode().showsBattery() && battery.known()) {
+    drawBattery(canvas, canvas.width() - 6, 10, battery.percent(), battery.charging(), kLowBatteryPercent);
+  }
   canvas.pushSprite(0, 0);
 
   if (mode().wantsSleep() ||

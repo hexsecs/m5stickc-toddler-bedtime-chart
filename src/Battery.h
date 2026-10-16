@@ -1,15 +1,18 @@
 #pragma once
 // Battery level for the grown-ups' indicator. Reads the hardware every few
-// seconds (not every frame) and smooths it with BatteryGauge.
+// seconds (not every frame) and smooths it with BatteryGauge. Skips reads
+// while a melody plays, because the buzzer makes the voltage sag.
 
 #include <BatteryGauge.h>
 
 #include "Platform.h"
+#include "Sound.h"
 
 class Battery {
  public:
   void update(uint32_t now) {
-    if (read_ && now - lastRead_ < kReadEveryMs) return;
+    uint32_t every = gauge_.known() ? kReadEveryMs : kWarmupEveryMs;
+    if ((read_ && now - lastRead_ < every) || sound.playing()) return;
     read_ = true;
     lastRead_ = now;
     gauge_.add(M5.Power.getBatteryLevel());
@@ -23,6 +26,7 @@ class Battery {
 
  private:
   static constexpr uint32_t kReadEveryMs = 5000;
+  static constexpr uint32_t kWarmupEveryMs = 100;  // quick first readings after waking
 
   BatteryGauge gauge_;
   uint32_t lastRead_ = 0;

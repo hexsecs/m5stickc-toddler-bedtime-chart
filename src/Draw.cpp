@@ -83,10 +83,13 @@ void drawBattery(M5Canvas& g, int right, int cy, int percent, bool charging, int
   int fill = (14 * percent + 50) / 100;
   if (fill > 0) g.fillRect(bx + 2, by + 2, fill, 6, color);
 
-  if (charging) {  // lightning bolt over the body
+  if (charging) {  // lightning bolt inside the body, outlined in navy so it shows on the fill
     int x = bx + 9;
-    g.fillTriangle(x + 2, cy - 6, x - 3, cy + 1, x + 1, cy + 1, col::YELLOW);
-    g.fillTriangle(x - 1, cy - 1, x + 3, cy - 1, x - 2, cy + 6, col::YELLOW);
+    for (int dx : {-1, 1, 0}) {
+      uint32_t c = dx ? col::NAVY : col::YELLOW;
+      g.fillTriangle(x + dx + 2, cy - 4, x + dx - 3, cy, x + dx + 1, cy, c);
+      g.fillTriangle(x + dx - 1, cy - 1, x + dx + 3, cy - 1, x + dx - 2, cy + 3, c);
+    }
   }
 }
 

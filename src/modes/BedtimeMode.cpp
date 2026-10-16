@@ -3,7 +3,6 @@
 #include "../Platform.h"
 #include <math.h>
 
-#include "../Battery.h"
 #include "../Config.h"
 #include "../Sound.h"
 
@@ -272,7 +271,6 @@ void BedtimeMode::drawStep(M5Canvas& g, uint32_t now) {
   int bob = (int)lroundf(3 * sinf(now / 260.0f));  // gentle "press me" wiggle
   s.icon(g, 60, 60 + bob);
   drawTitle(g, s.line1, s.line2, s.accent);
-  if (battery.known()) drawBattery(g, 234, 10, battery.percent(), battery.charging(), kLowBatteryPercent);
 
   const char* small = s.hint;
   if (M5.BtnB.isPressed() && bDownAt_ && !bRestartFired_) {

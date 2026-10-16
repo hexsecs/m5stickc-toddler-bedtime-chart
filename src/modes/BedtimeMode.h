@@ -23,6 +23,7 @@ class BedtimeMode : public Mode {
   void onSleep() override;
   bool wantsSleep() const override { return state_ == State::Asleep; }
   bool allowIdleSleep() const override;
+  bool showsBattery() const override { return state_ == State::Step && !list_.finished(); }
 
  private:
   enum class State { Step, Cheer, AllDone, SuperSleeper, Goodnight, Asleep };
